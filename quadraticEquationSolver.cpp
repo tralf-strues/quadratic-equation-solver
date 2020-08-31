@@ -7,6 +7,10 @@
 #define PRECISION 1e-5
 #define ERROR_CODE 1
 #define CORRECT_CODE 0
+#define NUMBER_OF_TESTS 11
+
+struct ComplexNumber;
+struct TestSet;
 
 struct ComplexNumber
 {
@@ -14,25 +18,12 @@ struct ComplexNumber
 	double imaginary = 0;
 };
 
-//-----------------------------------------------------------------------------
-//! Initializes a complexNumber
-//! @param [out] complexNumber pointer to the complexNumber that is to be
-//!                            initialized
-//! @param [in]  real          real value of the new complexNumber
-//! @param [in]  imaginary     imaginary value of the new complexNumber
-//! @note By default before initialization both values of a complexNumber are
-//!       set to zero.
-//-----------------------------------------------------------------------------
-void initComplexNumber(ComplexNumber* complexNumber, double real, double imaginary)
-{
-	complexNumber->real = real;
-	complexNumber->imaginary = imaginary;
-}
-
+void initComplexNumber(ComplexNumber* complexNumber, double real, double imaginary);
 bool isApproximatelyX(double value, double x);
 int solveQuadraticEquation(double a, double b, double c,
 						   ComplexNumber* x1, ComplexNumber* x2);
 void printComplexNumber(ComplexNumber number);
+void isApproximatelyXTest();
 void solverTest();
 
 //-----------------------------------------------------------------------------
@@ -43,8 +34,6 @@ void solverTest();
 //-----------------------------------------------------------------------------
 int main()
 {
-	solverTest();
-
 	printf("=== Quadratic equation solver ===\n");
 	printf("=== Equation ax2 + bx + c = 0 ===\n");
 	printf("Enter the coefficients in the following format \"a b c\": ");
@@ -59,7 +48,8 @@ int main()
 
 	printf("(%lg) * x2 + (%lg) * x + (%lg) = 0\n", a, b, c);
 
-	ComplexNumber x1 = {}, x2 = {};
+	ComplexNumber x1 = {0, 0};
+	ComplexNumber x2 = {0, 0};
 	int numberOfSolutions = solveQuadraticEquation(a, b, c, &x1, &x2);
 	switch (numberOfSolutions)
 	{
@@ -68,7 +58,7 @@ int main()
 		break;
 
 		case 1:
-		printf("Solution: x = %lg", x1.real);
+		printf("Solution: x = %lg\n", x1.real);
 		break;
 
 		case 2:
@@ -88,7 +78,41 @@ int main()
 		return ERROR_CODE;
 	}
 
+	printf("\n---------------------------------------------------------------------\n");
+	printf("Do you want to test the program? Enter y - Yes, n - No: ");
+	while (getchar() != '\n')
+		;
+	char ans = getchar();
+	while (ans != 'y' && ans != 'n')
+	{
+		while (getchar() != '\n')
+			;
+        printf("Please enter either \'y\' or \'n\': ");
+		ans = getchar();
+    }
+
+	if (ans == 'y')
+	{
+        isApproximatelyXTest();
+        solverTest();
+	}
+
 	return CORRECT_CODE;
+}
+
+//-----------------------------------------------------------------------------
+//! Initializes a complexNumber.
+//! @param [out] complexNumber pointer to the complexNumber that is to be
+//!                            initialized
+//! @param [in]  real          real value of the new complexNumber
+//! @param [in]  imaginary     imaginary value of the new complexNumber
+//! @note By default before initialization both values of a complexNumber are
+//!       set to zero.
+//-----------------------------------------------------------------------------
+void initComplexNumber(ComplexNumber* complexNumber, double real, double imaginary)
+{
+	complexNumber->real = real;
+	complexNumber->imaginary = imaginary;
 }
 
 //-----------------------------------------------------------------------------
@@ -101,7 +125,19 @@ int main()
 //-----------------------------------------------------------------------------
 bool isApproximatelyX(double value, double x)
 {
-	return fabs(value - x) < PRECISION;
+	return fabs(value - x) <= PRECISION;
+}
+
+//-----------------------------------------------------------------------------
+//! Swaps two ComplexNumbers
+//! @param [out] x1
+//! @param [out] x2
+//-----------------------------------------------------------------------------
+void swapComplexNumbers(ComplexNumber *x1, ComplexNumber *x2)
+{
+	ComplexNumber temp = *x1;
+	*x1 = *x2;
+	*x2 = temp;
 }
 
 //-----------------------------------------------------------------------------
@@ -189,18 +225,12 @@ int solveQuadraticEquation(double a, double b, double c,
 		x2->real = x1->real;
 		if (x1->imaginary > x2->imaginary)
 		{
-			ComplexNumber temp;
-			temp = *x1;
-			*x1 = *x2;
-			*x2 = temp;
+			swapComplexNumbers(x1, x2);
 		}
 	}
 	else if (x1->real > x2->real)
 	{
-		ComplexNumber temp;
-		temp = *x1;
-		*x1  = *x2;
-		*x2  = temp;
+		swapComplexNumbers(x1, x2);
 	}
 
 	return resultNumberOfSolutions;
@@ -223,31 +253,72 @@ void printComplexNumber(ComplexNumber number)
 		printf("%lg - %lgi", number.real, -number.imaginary);
 }
 
+//-----------------------------------------------------------------------------
+//! Tests whether the isApproximatelyX function works correct or not.
+//-----------------------------------------------------------------------------
+void isApproximatelyXTest()
+{
+    printf("\n==========================\n");
+    printf(  "TESTING isApproximatelyX()");
+    printf("\n==========================\n");
+
+	// tests[i][0] - value, tests[i][1] - x, tests[i][2] - 1 for true or 0 for false
+	double tests[3][3] = { {PRECISION,    0,  1},
+						   {10.0f - 1e-5, 10, 1},
+						   {-5.0f + 5e-3, -5, 0} };
+    int output = 0;
+    int numberOfTestsPassed = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        output = isApproximatelyX(tests[i][0], tests[i][1]);
+        printf("Test %d: is %lg approximately equal to %lg\n", i, tests[i][0], tests[i][1]);
+        printf("         Output: %s", output      ? "true\n" : "false\n");
+        printf("         Answer: %s", tests[i][2] ? "true\n" : "false\n");
+
+        if (output == tests[i][2])
+        {
+            printf("         Correct.\n\n");
+            numberOfTestsPassed++;
+        }
+        else
+            printf("         Incorrect.\n\n");
+
+    }
+
+    printf("---------------------------------------------------------------------\n");
+	printf("Number of tests successfully passed is %d/%d.\n", numberOfTestsPassed, 3);
+	printf("---------------------------------------------------------------------\n\n");
+}
+
 struct TestSet
 {
-	double a;
-	double b;
-	double c;
+	double a = 0;
+	double b = 0;
+	double c = 0;
 	//int programNSolutions;
-	int correctNSolutions;
+	int correctNSolutions = 0;
 	//ComplexNumber programX1, programX2;
-	ComplexNumber correctX1, correctX2;
+	ComplexNumber correctX1 = {};
+	ComplexNumber correctX2 = {};
 };
-
 
 //-----------------------------------------------------------------------------
 //! Tests whether the solveQuadraticEquation function works correct or not.
 //-----------------------------------------------------------------------------
 void solverTest()
 {
-	TestSet testSets[11];
+    printf("\n==========================\n");
+    printf(  "TESTING solverTest()");
+    printf("\n==========================\n");
+
+	TestSet testSets[NUMBER_OF_TESTS] = {};
 	int numberOfTestsPassed = 0;
 	// some of the coefficients are zero
 	testSets[0]  = TestSet{ 0, 0, 0,  INF_SOLUTIONS, {0,               0          }, {0,          0         } };
 	testSets[1]  = TestSet{ 0, 0, 5,  0,             {0,               0          }, {0,          0         } };
 	testSets[2]  = TestSet{ 0, 5, 0,  1,             {0,               0          }, {0,          0         } };
 	testSets[3]  = TestSet{ 0, 5, 3,  1,             {-0.6f,           0          }, {-0.6f,      0         } };
-	testSets[4]  = TestSet{ 5, 0, 0,  1,             {0,               0          }, {0,          0         } };								 						          						     
+	testSets[4]  = TestSet{ 5, 0, 0,  1,             {0,               0          }, {0,          0         } };
 	testSets[5]  = TestSet{ 5, 0, 3,  2,             {0,               -sqrt(0.6f)}, {0,          sqrt(0.6f)} };
 	testSets[6]  = TestSet{ 5, 0, -3, 2,             {-sqrt(0.6f),     0          }, {sqrt(0.6f), 0         } };
 	testSets[7]  = TestSet{ 5, 3, 0,  2,             {-0.6f,           0          }, {0,          0         } };
@@ -258,29 +329,32 @@ void solverTest()
 	testSets[10] = TestSet{ 1, 1, -2, 2,             {-2,              0          }, {1,          0         } };
 
 	int numberOfSolutions = 0;
-	ComplexNumber x1, x2;
-	for (int i = 0; i < 11; i++)
+	ComplexNumber x1 = {};
+	ComplexNumber x2 = {};
+	for (int i = 0; i < NUMBER_OF_TESTS; i++)
 	{
 		printf("Test %2d: (%lg) * x2 + (%lg) * x + %lg = 0\n\t", i, testSets[i].a, testSets[i].b, testSets[i].c);
 		numberOfSolutions = solveQuadraticEquation(testSets[i].a, testSets[i].b, testSets[i].c, &x1, &x2);
 
-		if (numberOfSolutions == testSets[i].correctNSolutions              && 
+		if (numberOfSolutions == testSets[i].correctNSolutions              &&
 			isApproximatelyX(x1.real,      testSets[i].correctX1.real)      &&
 			isApproximatelyX(x1.imaginary, testSets[i].correctX1.imaginary) &&
 			isApproximatelyX(x2.real,      testSets[i].correctX2.real)      &&
 			isApproximatelyX(x2.imaginary, testSets[i].correctX2.imaginary))
 		{
-			printf("Correct. x1 = ");
+			printf("Correct. Solutions got/expected (-1 corresponds to infinity) %d/%d. x1 = ",
+				   numberOfSolutions, testSets[i].correctNSolutions);
 			printComplexNumber(x1);
 			printf(", x2 = ");
 			printComplexNumber(x2);
-			printf("\n");
+			printf("\n\n");
 
 			numberOfTestsPassed++;
 		}
 		else
 		{
-			printf("Incorrect.\n\tOutput: x1 = ");
+			printf("Incorrect. Solutions got/expected (-1 corresponds to infinity) %d/%d. \n\tOutput: x1 = ",
+				   numberOfSolutions, testSets[i].correctNSolutions);
 			printComplexNumber(x1);
 			printf(", x2 = ");
 			printComplexNumber(x2);
@@ -289,7 +363,7 @@ void solverTest()
 			printComplexNumber(testSets[i].correctX1);
 			printf(", x2 = ");
 			printComplexNumber(testSets[i].correctX2);
-			printf("\n");
+			printf("\n\n");
 		}
 
 		initComplexNumber(&x1, 0, 0);
@@ -297,9 +371,8 @@ void solverTest()
 	}
 
 	printf("---------------------------------------------------------------------\n");
-	printf("Number of tests successfully passed is %d/11.\n", numberOfTestsPassed);
+	printf("Number of tests successfully passed is %d/%d.\n", numberOfTestsPassed, NUMBER_OF_TESTS);
 	printf("---------------------------------------------------------------------\n\n");
-
 }
 
 
