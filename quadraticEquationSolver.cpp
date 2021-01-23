@@ -39,7 +39,7 @@ int main()
 	printf("Enter the coefficients in the following format \"a b c\": ");
 
 	double a = 0, b = 0, c = 0;
-	while (scanf_s("%lg %lg %lg", &a, &b, &c) != 3)
+	while (scanf("%lg %lg %lg", &a, &b, &c) != 3)
 	{
 		while (getchar() != '\n')
 			;
